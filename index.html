@@ -18,6 +18,7 @@
   @font-face { font-family:"Limelight"; font-weight:400; font-display:swap; src:url(fonts/limelight-400.woff2) format("woff2"); }
   @font-face { font-family:"Cinzel"; font-weight:400 900; font-display:swap; src:url(fonts/cinzel-variable.woff2) format("woff2"); }
   @font-face { font-family:"Nabla"; font-weight:400; font-display:swap; src:url(fonts/nabla-variable.woff2) format("woff2"); }
+  @font-face { font-family:"Indie Flower"; font-weight:400; font-display:swap; src:url(fonts/indieflower-400.woff2) format("woff2"); }
 
   :root {
     color-scheme: light;
@@ -44,6 +45,7 @@
     --focus: #f2a516;
     --note-yellow: #f6e58d;
     --note-blue: #cfe6f2;
+    --note-pink: #f6c9d3;
     --note-ink: #2b2a1f;
     --note-ink-dim: #4f4c38;
     --silkscreen: "Barlow Condensed", "Arial Narrow", sans-serif;
@@ -60,12 +62,13 @@
   :focus-visible { outline:3px solid var(--focus); outline-offset:3px; }
   .readout :focus-visible, .note-card :focus-visible { outline-color:var(--ink); }
   .nowrap { white-space:nowrap; }
+  .sr { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
 
-  .rack { max-width:1320px; margin:0 auto; padding:clamp(16px, 4vw, 48px) clamp(16px, 3vw, 40px) 120px; }
+  .rack { max-width:1320px; margin:0 auto; padding:clamp(16px, 4vw, 48px) clamp(16px, 3vw, 40px) 160px; }
 
   /* one continuous faceplate with rack ears */
   .faceplate {
-    position:relative; background:var(--steel); border-radius:3px;
+    position:relative; z-index:1; background:var(--steel); border-radius:3px;
     padding:clamp(22px, 3.5vw, 44px) clamp(20px, 6vw, 84px);
     box-shadow:inset 0 1px 0 var(--steel-light), inset 0 -2px 0 var(--steel-rim), 0 18px 34px #10161c80;
   }
@@ -260,6 +263,45 @@
   .log .when { color:var(--note-ink-dim); white-space:nowrap; font-variant-numeric:tabular-nums; }
   .note-card .note { margin-top:12px; color:var(--note-ink-dim); }
 
+  /* one more note, stuffed under the server; only its bottom edge pokes out until someone pulls it */
+  .stash { display:none; }
+  .js .stash {
+    appearance:none; border:0; cursor:pointer; text-align:left; font:inherit;
+    position:relative; z-index:0; display:block; width:min(260px, 78%); height:190px;
+    margin:-168px 14% 0 auto; padding:16px 20px 18px; border-radius:2px;
+    background:var(--note-pink); color:var(--note-ink);
+    box-shadow:0 8px 14px #10161c59, 0 2px 3px #10161c40;
+    transform:rotate(4deg); transition:transform .2s cubic-bezier(.2,.8,.2,1);
+  }
+  .js .stash[aria-expanded="false"]:hover { transform:translateY(5px) rotate(3deg); }
+  .js .stash:focus-visible { outline-color:var(--focus); }
+  /* dragged out in jerks, snagging on the chassis a few times on the way */
+  @keyframes scrape {
+    0% { transform:translate(0, 0) rotate(4deg); }
+    8% { transform:translate(-3px, 11px) rotate(2deg); }
+    14% { transform:translate(2px, 7px) rotate(5deg); }
+    25% { transform:translate(-2px, 40px) rotate(1deg); }
+    31% { transform:translate(3px, 34px) rotate(4deg); }
+    44% { transform:translate(-4px, 83px) rotate(-1deg); }
+    50% { transform:translate(2px, 77px) rotate(2deg); }
+    64% { transform:translate(-2px, 126px) rotate(-3deg); }
+    70% { transform:translate(1px, 120px) rotate(0deg); }
+    86% { transform:translate(0, 166px) rotate(-4deg); }
+    100% { transform:translate(0, 158px) rotate(-2.5deg); }
+  }
+  .js .stash.pulling { animation:scrape 1.5s cubic-bezier(.4,0,.3,1) both; }
+  .js .stash.pulled { transform:translate(0, 158px) rotate(-2.5deg); cursor:default; }
+  /* dust and scuffs from living under the chassis */
+  .stash.pulled::after {
+    content:""; position:absolute; inset:0; pointer-events:none; border-radius:inherit;
+    background:
+      repeating-linear-gradient(-8deg, transparent 0 9px, #5a4a4a14 9px 10px, transparent 10px 23px),
+      linear-gradient(#3b302c26, transparent 45%);
+    animation:show .4s ease-out both;
+  }
+  .stash-msg { display:block; font:400 1.3rem/1.35 "Indie Flower", "Comic Sans MS", cursive; }
+  @keyframes show { from { opacity:0; } }
+
   @media (max-width: 900px) {
     .front { grid-template-columns:minmax(0, 1fr); grid-template-rows:none; }
     .nameplate, .display, .front .ports { grid-column:1; grid-row:auto; }
@@ -302,6 +344,7 @@
     .bays-head p { display:none; }
     .js .bays > li.tray-empty { display:none; }
     .caddy:not([aria-expanded="true"]):hover { transform:none; }
+    .js .stash { margin-right:8%; }
   }
   @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { transition:none !important; animation:none !important; }
@@ -467,6 +510,11 @@
     </ul>
   </div>
 
+  <button class="stash" type="button" aria-expanded="false">
+    <span class="sr">A note stuffed under the server</span>
+    <span class="stash-msg" id="stash-msg">if u've read this far why dun u email me directly? i bet u r interested in me :)</span>
+  </button>
+
 </main>
 <script src="miho/miho.js" data-api="https://api.dllmch.org/llm/miho" data-mount="miho-lcd" defer></script>
 <script>
@@ -500,6 +548,23 @@
     }, { threshold: 0.6 });
     seen.observe(bays);
   }
+
+  // the note under the server: its words are already on it, hidden under the chassis until it's dragged out
+  var stash = document.querySelector(".stash");
+  function pulled() {
+    if (stash.classList.contains("pulled")) { return; }
+    stash.classList.remove("pulling");
+    stash.classList.add("pulled");
+  }
+  stash.addEventListener("click", function () {
+    if (stash.getAttribute("aria-expanded") === "true") { return; }
+    stash.setAttribute("aria-expanded", "true");
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) { pulled(); return; }
+    stash.addEventListener("animationend", pulled, { once: true });
+    // animationend can go missing (background tab), so don't leave the note stuck halfway
+    setTimeout(pulled, 1700);
+    stash.classList.add("pulling");
+  });
 
   var talk = document.getElementById("talk");
   var state = document.getElementById("miho-state");
