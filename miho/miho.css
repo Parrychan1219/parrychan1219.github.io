@@ -1,0 +1,196 @@
+.miho-root {
+    --miho-olive: #657348;
+    --miho-olive-dark: #495638;
+    --miho-bg: #fffefa;
+    --miho-panel: #f5f4ef;
+    --miho-ink: #25291f;
+    --miho-muted: #62675d;
+    --miho-line: #d9dccf;
+    --miho-user: #e5ebd9;
+    color: var(--miho-ink);
+    font: 15px/1.5 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    position: fixed;
+    right: 16px;
+    bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 2147483000;
+}
+
+.miho-root *, .miho-root *::before, .miho-root *::after { box-sizing: border-box; }
+.miho-root [hidden] { display: none !important; }
+
+.miho-launcher, .miho-icon-button, .miho-send {
+    appearance: none;
+    font: inherit;
+    cursor: pointer;
+}
+.miho-launcher {
+    width: 58px;
+    height: 58px;
+    padding: 0;
+    border: 2px solid #fff;
+    border-radius: 50%;
+    background: var(--miho-olive);
+    box-shadow: 0 5px 20px #0004;
+    display: grid;
+    place-items: center;
+    position: relative;
+}
+.miho-launcher:hover { background: var(--miho-olive-dark); }
+.miho-launcher-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    border-radius: 50%;
+}
+.miho-launcher svg { display: none; width: 25px; height: 25px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.miho-open .miho-launcher { display: none; }
+
+.miho-panel {
+    position: absolute;
+    right: 0;
+    bottom: 72px;
+    width: min(410px, calc(100vw - 32px));
+    height: min(590px, calc(100vh - 104px));
+    height: min(590px, calc(100dvh - 104px));
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    border: 1px solid var(--miho-line);
+    border-radius: 18px;
+    background: var(--miho-bg);
+    box-shadow: 0 16px 48px #0003;
+}
+.miho-header {
+    min-height: 72px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    color: #fff;
+    background: var(--miho-olive-dark);
+}
+.miho-avatar {
+    flex: none;
+    width: 42px;
+    height: 42px;
+    object-fit: contain;
+    border-radius: 50%;
+}
+.miho-heading { flex: 1; min-width: 0; }
+.miho-heading strong, .miho-heading span { display: block; }
+.miho-heading strong { font-size: 1rem; }
+.miho-heading span { margin-top: 2px; font-size: .72rem; line-height: 1.25; opacity: .9; }
+.miho-icon-button {
+    flex: none;
+    width: 34px;
+    height: 34px;
+    padding: 6px;
+    border: 0;
+    border-radius: 8px;
+    color: inherit;
+    background: transparent;
+}
+.miho-icon-button:hover { background: #ffffff26; }
+.miho-icon-button svg { width: 100%; height: 100%; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.miho-log {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow: auto;
+    padding: 16px 14px 12px;
+    background: var(--miho-panel);
+    overscroll-behavior: contain;
+}
+.miho-greeting, .miho-message, .miho-note, .miho-typing {
+    max-width: 90%;
+    padding: 9px 12px;
+    border-radius: 15px;
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+.miho-greeting, .miho-bot, .miho-typing {
+    align-self: flex-start;
+    border: 1px solid var(--miho-line);
+    border-bottom-left-radius: 5px;
+    background: var(--miho-bg);
+}
+.miho-user {
+    align-self: flex-end;
+    border-bottom-right-radius: 5px;
+    background: var(--miho-user);
+}
+.miho-note { align-self: center; max-width: 100%; color: var(--miho-muted); text-align: center; font-size: .86rem; }
+.miho-typing { color: var(--miho-muted); font-size: .86rem; }
+.miho-cursor::after { content: "▍"; margin-left: 2px; animation: miho-blink 1s steps(2) infinite; }
+.miho-form {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    padding: 10px 12px;
+    border-top: 1px solid var(--miho-line);
+    background: var(--miho-bg);
+}
+.miho-input {
+    flex: 1;
+    min-width: 0;
+    min-height: 42px;
+    max-height: 110px;
+    resize: none;
+    padding: 9px 11px;
+    border: 1px solid var(--miho-line);
+    border-radius: 11px;
+    color: var(--miho-ink);
+    background: var(--miho-panel);
+    font: inherit;
+    font-size: 16px;
+}
+.miho-input:focus { outline: 2px solid var(--miho-olive); outline-offset: 1px; }
+.miho-input:disabled { opacity: .65; }
+.miho-send {
+    min-width: 58px;
+    height: 42px;
+    padding: 0 11px;
+    border: 0;
+    border-radius: 11px;
+    color: #fff;
+    background: var(--miho-olive);
+    font-weight: 650;
+}
+.miho-send:disabled { cursor: default; opacity: .48; }
+.miho-send:not(:disabled):hover { background: var(--miho-olive-dark); }
+.miho-root button:focus-visible { outline: 3px solid #d5b95c; outline-offset: 2px; }
+
+@keyframes miho-blink { 50% { opacity: 0; } }
+@media (prefers-color-scheme: dark) {
+    .miho-root {
+        --miho-bg: #1d2420;
+        --miho-panel: #151b18;
+        --miho-ink: #e8ede6;
+        --miho-muted: #b2bbae;
+        --miho-line: #3a463c;
+        --miho-user: #344332;
+        --miho-olive: #78885a;
+        --miho-olive-dark: #46543b;
+    }
+}
+@media (max-width: 520px) {
+    .miho-root { right: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px)); }
+    .miho-panel {
+        position: fixed;
+        inset: max(12px, env(safe-area-inset-top, 0px)) 16px max(12px, env(safe-area-inset-bottom, 0px));
+        width: auto;
+        height: auto;
+        border-radius: 17px;
+    }
+    .miho-header { padding: 12px 10px; gap: 8px; }
+    .miho-heading span { font-size: .68rem; }
+    .miho-icon-button { width: 32px; height: 32px; }
+    .miho-log { padding-right: 12px; padding-left: 12px; }
+    .miho-form { padding: 10px; }
+    .miho-greeting, .miho-message { max-width: 92%; }
+}
+@media (prefers-reduced-motion: reduce) {
+    .miho-root *, .miho-root *::before, .miho-root *::after { animation: none !important; transition: none !important; }
+}

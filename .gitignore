@@ -1,0 +1,9 @@
+# Points at the staging server: never publish
+miho-test.html
+
+.DS_Store
+
+# Design notes for local tools, not for the site
+PRODUCT.md
+DESIGN.md
+.impeccable/

@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Parry Chan</title>
+<meta name="description" content="Parry Chan (Chan Pak San) – Linux system administrator, ICT tutor and maker in Hong Kong.">
+<meta name="theme-color" content="#2f3a44">
+<link rel="preload" href="fonts/barlow-condensed-700.woff2" as="font" type="font/woff2" crossorigin>
+<style>
+  @font-face { font-family:"Barlow Condensed"; font-weight:500; font-display:swap; src:url(fonts/barlow-condensed-500.woff2) format("woff2"); }
+  @font-face { font-family:"Barlow Condensed"; font-weight:700; font-display:swap; src:url(fonts/barlow-condensed-700.woff2) format("woff2"); }
+  @font-face { font-family:"Barlow"; font-weight:400; font-display:swap; src:url(fonts/barlow-400.woff2) format("woff2"); }
+  @font-face { font-family:"Barlow"; font-weight:500; font-display:swap; src:url(fonts/barlow-500.woff2) format("woff2"); }
+  @font-face { font-family:"Doto"; font-weight:600; font-display:swap; src:url(fonts/doto-600.woff2) format("woff2"); }
+  @font-face { font-family:"Doto"; font-weight:900; font-display:swap; src:url(fonts/doto-900.woff2) format("woff2"); }
+  @font-face { font-family:"Limelight"; font-weight:400; font-display:swap; src:url(fonts/limelight-400.woff2) format("woff2"); }
+  @font-face { font-family:"Cinzel"; font-weight:400 900; font-display:swap; src:url(fonts/cinzel-variable.woff2) format("woff2"); }
+  @font-face { font-family:"DotGothic16"; font-weight:400; font-display:swap; src:url(fonts/dotgothic16-miho.woff2) format("woff2"); }
+  @font-face { font-family:"Nabla"; font-weight:400; font-display:swap; src:url(fonts/nabla-variable.woff2) format("woff2"); }
+
+  :root {
+    color-scheme: light;
+    --rack: #2f3a44;
+    --steel: #52667a;
+    --steel-rim: #3f5063;
+    --steel-light: #6e8296;
+    --hole: #26313b;
+    --silk: #f2f5f7;
+    --silk-dim: #e6edf2;
+    --well: #364553;
+    --caddy: #d5d9dc;
+    --caddy-out: #e8ebed;
+    --caddy-shade: #b4bbc1;
+    --ink: #26313a;
+    --ink-dim: #47545e;
+    --label: #eef0f1;
+    --label-rule: #7d8790;
+    --lcd: #c3d35a;
+    --lcd-ink: #2c360d;
+    --lcd-frame: #2b3138;
+    --led-run: #3fae4a;
+    --led-warn: #f2a516;
+    --focus: #f2a516;
+    --note-yellow: #f6e58d;
+    --note-blue: #cfe6f2;
+    --note-ink: #2b2a1f;
+    --note-ink-dim: #4f4c38;
+    --silkscreen: "Barlow Condensed", "Arial Narrow", sans-serif;
+    --text: "Barlow", "Helvetica Neue", Arial, sans-serif;
+    --dots: "Doto", ui-monospace, monospace;
+  }
+
+  * { box-sizing:border-box; }
+  html { scrollbar-color:var(--steel-rim) var(--rack); }
+  body { margin:0; background:var(--rack); color:var(--silk); font:400 1.0625rem/1.6 var(--text); }
+  ::selection { background:var(--lcd); color:var(--lcd-ink); }
+  a { color:inherit; text-underline-offset:.22em; text-decoration-thickness:1px; }
+  a:hover { text-decoration-thickness:2px; }
+  :focus-visible { outline:3px solid var(--focus); outline-offset:3px; }
+  .readout :focus-visible, .note-card :focus-visible { outline-color:var(--ink); }
+  .nowrap { white-space:nowrap; }
+
+  .rack { max-width:1320px; margin:0 auto; padding:clamp(16px, 4vw, 48px) clamp(16px, 3vw, 40px) 120px; }
+
+  /* one continuous faceplate with rack ears */
+  .faceplate {
+    position:relative; background:var(--steel); border-radius:3px;
+    padding:clamp(22px, 3.5vw, 44px) clamp(20px, 6vw, 84px);
+    box-shadow:inset 0 1px 0 var(--steel-light), inset 0 -2px 0 var(--steel-rim), 0 18px 34px #10161c80;
+  }
+  .faceplate::before, .faceplate::after {
+    content:""; position:absolute; top:0; bottom:0; width:clamp(10px, 3.4vw, 46px);
+    background:
+      radial-gradient(circle at 50% 50%, var(--hole) 0 4px, var(--steel-light) 4.6px, transparent 5.4px) 50% 34px / 100% 120px repeat-y,
+      var(--steel-rim);
+  }
+  .faceplate::before { left:0; border-radius:3px 0 0 3px; }
+  .faceplate::after { right:0; border-radius:0 3px 3px 0; }
+
+  /* two rows shared by both columns: nameplate beside the LCD, links beside the keys */
+  .front { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 540px); grid-template-rows:auto auto; gap:24px 48px; }
+  .nameplate { grid-column:1; grid-row:1; display:flex; flex-direction:column; }
+  .nameplate > p:last-child { margin:auto 0 0; padding-top:18px; }
+  .display { grid-column:2; grid-row:1 / span 2; display:grid; grid-template-rows:subgrid; }
+  .display .keys { margin-top:0; align-self:center; }
+  .front .ports { grid-column:1; grid-row:2; align-self:center; margin:0; }
+  .nameplate h1 {
+    margin:0; font:700 clamp(3.4rem, 9vw, 6rem)/.88 var(--silkscreen);
+    letter-spacing:.04em; text-transform:uppercase;
+  }
+  .nameplate .role {
+    margin:18px 0 0; max-width:30ch; color:var(--silk-dim);
+    font:500 clamp(1.2rem, 1.9vw, 1.45rem)/1.35 var(--silkscreen); letter-spacing:.08em; text-transform:uppercase; text-wrap:balance;
+  }
+
+  .lcd-frame { display:flex; flex-direction:column; background:var(--lcd-frame); border-radius:6px; padding:14px 14px 0; box-shadow:inset 0 2px 6px #0007, 0 1px 0 var(--steel-light); }
+  .lcd-frame .lcd { flex:none; }
+  /* model name silkscreened on the lower bezel; any spare frame height sits above it */
+  .bezel-model { flex:1 0 auto; display:flex; align-items:center; justify-content:center; min-height:40px; padding:10px 0 13px 0; font:700 .8rem/1 var(--silkscreen); letter-spacing:.22em; text-transform:uppercase; color:#575f67bc; text-shadow:0 -1px 0 #0000008c, 0 1px 0 #ffffff14; }
+  .lcd {
+    background:var(--lcd); color:var(--lcd-ink); border-radius:3px; min-height:11.5em;
+    padding:16px 18px; font:600 1.15rem/1.45 var(--dots); letter-spacing:.02em;
+    box-shadow:inset 0 3px 12px #6f7d2a59;
+  }
+  .lcd .status .jp { font-family:"DotGothic16", var(--dots); letter-spacing:.06em; color:#2c360dcc; }
+  .lcd .status #miho-state { margin-left:auto; }
+  .lcd .status { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0 12px; border-bottom:2px dotted #2c360d55; padding-bottom:6px; margin-bottom:10px; }
+  /* her face printed in the display's own ink, dot-matrix style */
+  .lcd-body { display:grid; grid-template-columns:96px minmax(0, 1fr); gap:16px; align-items:start; }
+  .sprite { position:relative; width:96px; height:96px; }
+  .sprite img { display:block; width:100%; height:100%; filter:grayscale(1) contrast(2.6) brightness(1.1); mix-blend-mode:multiply; }
+  .sprite::after { content:""; position:absolute; inset:0; background:radial-gradient(circle, transparent 0 1.25px, #c3d35a99 1.6px) 0 0 / 3px 3px; }
+
+  /* the chat itself runs on the display */
+  .chat { min-width:0; }
+  .miho-embedded { display:flex; flex-direction:column; gap:10px; }
+  .miho-log { height:8.8em; overflow-y:auto; display:flex; flex-direction:column; gap:.55em; padding-right:6px; scrollbar-width:thin; scrollbar-color:var(--lcd-ink) transparent; overscroll-behavior:contain; }
+  .miho-greeting, .miho-message, .miho-note, .miho-typing { overflow-wrap:anywhere; white-space:pre-wrap; }
+  .miho-user { align-self:flex-end; max-width:88%; padding:0 .35em; background:var(--lcd-ink); color:var(--lcd); }
+  .miho-note, .miho-typing { font-size:.85em; }
+  .miho-offline { font-weight:900; }
+  .miho-cursor::after, .lcd-caret { content:""; display:inline-block; width:.55em; height:1em; margin-left:2px; vertical-align:-.12em; background:var(--lcd-ink); animation:blink 1.1s steps(1) infinite; }
+  @keyframes blink { 50% { opacity:0; } }
+  .miho-form { display:grid; grid-template-columns:minmax(0, 1fr) auto auto; gap:8px; align-items:end; padding-top:8px; border-top:2px dotted #2c360d55; }
+  .miho-input { width:100%; min-height:1.45em; margin:0; padding:0; border:0; resize:none; overflow-y:auto; background:transparent; color:var(--lcd-ink); font:inherit; caret-color:var(--lcd-ink); }
+  .miho-input::placeholder { color:#4a5818; opacity:1; }
+  .miho-input:focus { outline:none; }
+  .miho-form:focus-within { border-top-style:solid; }
+  .miho-input:disabled { cursor:not-allowed; }
+  .miho-send, .miho-reset { appearance:none; border:0; cursor:pointer; padding:.1em .5em; border-radius:2px; background:var(--lcd-ink); color:var(--lcd); font:inherit; font-size:.85em; line-height:1.4; }
+  .miho-reset { background:transparent; color:var(--lcd-ink); box-shadow:inset 0 0 0 2px var(--lcd-ink); }
+  .miho-send:disabled { cursor:default; background:#2c360d73; }
+  .miho-send:focus-visible, .miho-reset:focus-visible { outline:2px solid var(--lcd-ink); outline-offset:2px; }
+  .lcd .hint { margin-top:10px; font-size:.82rem; line-height:1.35; }
+
+  .keys { display:flex; gap:14px; margin-top:18px; }
+  .key {
+    flex:1 1 0; justify-content:center;
+    appearance:none; border:0; cursor:pointer; text-decoration:none;
+    display:inline-flex; align-items:center; gap:12px;
+    padding:14px 18px 13px; border-radius:5px;
+    background:var(--label); color:var(--ink);
+    font:700 1.1rem/1 var(--silkscreen); letter-spacing:.12em; text-transform:uppercase;
+    box-shadow:0 3px 0 var(--caddy-shade), 0 6px 12px #1d283266;
+    transition:transform .12s cubic-bezier(.2,.8,.2,1), box-shadow .12s cubic-bezier(.2,.8,.2,1);
+  }
+  .key:hover { background:#fff; }
+  .key:active { transform:translateY(3px); box-shadow:0 0 0 var(--caddy-shade), 0 2px 6px #1d283266; }
+  .key .pip { width:10px; height:10px; border-radius:50%; background:#8b969e; box-shadow:0 0 0 2px #0002; }
+  .key[data-state="online"] .pip { background:var(--led-run); }
+  .key[data-state="offline"] .pip { background:var(--led-warn); }
+  .key.secondary { background:transparent; color:var(--silk); box-shadow:inset 0 0 0 2px var(--silk-dim); }
+  .key.secondary:hover { background:#ffffff14; }
+  .key.secondary:active { transform:translateY(1px); }
+
+  .ports { display:flex; flex-wrap:wrap; gap:10px 14px; margin-top:clamp(22px, 3vw, 34px); font:500 1rem/1.2 var(--silkscreen); letter-spacing:.05em; text-transform:uppercase; }
+  .ports a { overflow-wrap:anywhere; }
+  .ports a:first-child { text-transform:none; letter-spacing:.02em; flex-basis:100%; justify-self:start; width:max-content; max-width:100%; }
+
+  /* punched vent band: dark hole, light lower lip */
+  .vents {
+    height:44px; margin:clamp(26px, 3.5vw, 40px) 0 clamp(20px, 3vw, 30px);
+    background:
+      radial-gradient(circle at 50% 50%, var(--hole) 0 3.4px, transparent 3.9px) 0 0 / 14px 14px,
+      radial-gradient(circle at 50% 50%, var(--steel-light) 0 3.4px, transparent 3.9px) 0 1.5px / 14px 14px;
+  }
+
+  /* drive bays */
+  .bays-head { display:flex; justify-content:space-between; align-items:baseline; gap:16px; margin:0 0 12px; }
+  .bays-head h2 { margin:0; font:700 1.05rem/1 var(--silkscreen); letter-spacing:.16em; text-transform:uppercase; color:var(--silk-dim); }
+  .bays-head p { margin:0; font:500 .95rem/1.2 var(--silkscreen); letter-spacing:.08em; text-transform:uppercase; color:var(--silk-dim); }
+
+  .bays { list-style:none; margin:0; padding:12px; background:var(--well); border-radius:4px; box-shadow:inset 0 3px 8px #0006; display:grid; gap:10px; }
+  .caddy {
+    appearance:none; border:0; cursor:pointer; width:100%; text-align:left; color:var(--ink);
+    position:relative; display:grid; grid-template-columns:minmax(0, 1fr); grid-template-rows:3.3em 1fr auto; gap:14px;
+    min-height:clamp(170px, 18vw, 210px); padding:14px 14px 12px; border-radius:4px;
+    font:inherit; background:var(--caddy);
+    box-shadow:0 1px 0 #ffffff80 inset, 0 2px 0 var(--caddy-shade);
+    transition:transform .32s cubic-bezier(.16,1,.3,1), box-shadow .32s cubic-bezier(.16,1,.3,1), background-color .2s;
+  }
+  .caddy:hover { background:#dde1e4; }
+  .caddy .title { font:700 1.2rem/1.1 var(--silkscreen); letter-spacing:.06em; text-transform:uppercase; padding-right:22px; align-self:start; }
+  .caddy .grip {
+    align-self:center; height:52px; border-radius:2px; min-width:0; width:100%;
+    background:
+      repeating-linear-gradient(90deg, var(--caddy-shade) 0 5px, transparent 5px 11px),
+      linear-gradient(#0000 0 46px, #ffffffa0 46px);
+    box-shadow:inset 0 2px 2px #0000001f;
+  }
+  .caddy .state { font:500 .8rem/1 var(--silkscreen); letter-spacing:.14em; text-transform:uppercase; color:var(--ink-dim); }
+  .led { position:absolute; top:15px; right:14px; width:11px; height:11px; border-radius:50%; background:var(--led-run); opacity:.55; box-shadow:0 0 0 2px #0000001f; transition:opacity .2s, box-shadow .2s; }
+  .led.warn { background:var(--led-warn); }
+  .caddy[aria-expanded="true"] .led { opacity:1; box-shadow:0 0 0 2px #0000001f, 0 0 10px 2px #3fae4ab3; }
+  .caddy[aria-expanded="true"] .led.warn { box-shadow:0 0 0 2px #0000001f, 0 0 10px 2px #f2a516b3; }
+
+  .readout {
+    background:var(--caddy-out); color:var(--ink); border-radius:4px;
+    padding:clamp(18px, 3vw, 30px) clamp(18px, 3vw, 34px);
+    display:grid; grid-template-columns:minmax(0, 2fr) minmax(0, 1fr); gap:10px 40px; align-items:start;
+  }
+  .readout h3 { grid-column:1 / -1; margin:0 0 4px; font:700 clamp(1.6rem, 3vw, 2.2rem)/1 var(--silkscreen); letter-spacing:.04em; text-transform:uppercase; }
+  .readout p { margin:0; max-width:62ch; color:var(--ink-dim); }
+  .readout .meta { display:flex; flex-direction:column; gap:12px; }
+  .stamps { display:flex; flex-wrap:wrap; gap:6px; }
+  .stamps span { font:500 .85rem/1 var(--silkscreen); letter-spacing:.1em; text-transform:uppercase; padding:5px 8px 4px; border-radius:3px; box-shadow:inset 0 0 0 1.5px var(--ink-dim); color:var(--ink); }
+  .readout a { font:700 1rem/1 var(--silkscreen); letter-spacing:.1em; text-transform:uppercase; }
+
+  /* with JS: one drive out at a time; the open caddy slides down into its tray */
+  .js .bays { grid-template-columns:repeat(6, minmax(0, 1fr)); grid-auto-flow:row dense; }
+  .js .bays > li { display:contents; }
+  .js .readout { grid-column:1 / -1; }
+  .js .readout[hidden] { display:none; }
+  /* desktop: the bay left behind is an empty recess, the drive itself sits in the tray below */
+  .js .caddy[aria-expanded="true"] { background:#29343e; color:var(--silk-dim); box-shadow:inset 0 4px 10px #000000b3; }
+  .js .caddy[aria-expanded="true"] .grip, .js .caddy[aria-expanded="true"] .state { visibility:hidden; }
+  .js .readout { position:relative; padding-left:clamp(56px, 6vw, 74px); padding-right:clamp(48px, 5vw, 64px); }
+  .js .readout::before {
+    content:""; position:absolute; left:16px; top:16px; bottom:16px; width:clamp(22px, 2.4vw, 30px); border-radius:2px;
+    background:repeating-linear-gradient(0deg, var(--caddy-shade) 0 5px, transparent 5px 11px); box-shadow:inset 0 2px 2px #0000001f;
+  }
+  .js .readout::after {
+    content:""; position:absolute; top:18px; right:18px; width:11px; height:11px; border-radius:50%;
+    background:var(--led-run); box-shadow:0 0 0 2px #0000001f, 0 0 10px 2px #3fae4ab3;
+  }
+  .tray-empty { display:none; }
+  .js .bays > li.tray-empty {
+    grid-column:1 / -1; display:flex; align-items:center; justify-content:center; gap:14px; min-height:120px;
+    border-radius:4px; box-shadow:inset 0 0 0 2px #ffffff26; color:var(--silk-dim);
+    font:500 1rem/1.3 var(--silkscreen); letter-spacing:.12em; text-transform:uppercase; text-align:center; padding:16px;
+  }
+  .js .bays.has-open > li.tray-empty { display:none; }
+  .tray-arrow { width:14px; height:14px; border-left:3px solid currentColor; border-top:3px solid currentColor; transform:rotate(45deg); margin-top:6px; flex:none; }
+  /* one staggered nudge the first time the bays scroll into view */
+  @keyframes nudge { 0%, 100% { transform:translateY(0); } 40% { transform:translateY(-8px); } 70% { transform:translateY(2px); } }
+  .bays.nudge .caddy[aria-expanded="false"] { animation:nudge .6s cubic-bezier(.3,.7,.4,1) both; animation-delay:calc(var(--i) * 90ms); }
+  .caddy:not([aria-expanded="true"]):hover { transform:translateY(-4px); }
+  .js .readout.warn::after { background:var(--led-warn); box-shadow:0 0 0 2px #0000001f, 0 0 10px 2px #f2a516b3; }
+
+  /* sticky notes stuck on the faceplate */
+  .notes { display:grid; grid-template-columns:minmax(0, 1fr) minmax(0, 1.2fr); gap:28px 36px; margin-top:clamp(30px, 4vw, 46px); align-items:start; }
+  .note-card {
+    position:relative; color:var(--note-ink); padding:30px clamp(18px, 2.6vw, 28px) 24px; border-radius:2px;
+    box-shadow:0 10px 18px #10161c59, 0 2px 3px #10161c40;
+  }
+  .note-card::before { content:""; position:absolute; top:-11px; left:50%; width:96px; height:24px; margin-left:-48px; background:#f4f1e6b3; box-shadow:0 1px 2px #0002; transform:rotate(-2deg); }
+  .note-about { background:var(--note-yellow); transform:rotate(-1.2deg); }
+  .note-exp { background:var(--note-blue); transform:rotate(.9deg); }
+  .note-exp::before { left:62%; width:84px; margin-left:-42px; transform:rotate(4.5deg); top:-9px; }
+  .note-card h2 { margin:0 0 12px; font:700 1rem/1 var(--silkscreen); letter-spacing:.16em; text-transform:uppercase; color:var(--note-ink-dim); }
+  .note-card p { margin:0; max-width:62ch; }
+  .log { margin:0; padding:0; list-style:none; }
+  .log li { display:flex; justify-content:space-between; gap:4px 16px; flex-wrap:wrap; padding:8px 0; box-shadow:inset 0 -1px 0 #26313a33; }
+  .log li:first-child { padding-top:0; }
+  .log .what { font-weight:500; }
+  .log .when { color:var(--note-ink-dim); white-space:nowrap; font-variant-numeric:tabular-nums; }
+  .note-card .note { margin-top:12px; color:var(--note-ink-dim); }
+
+  @media (max-width: 900px) {
+    .front { grid-template-columns:minmax(0, 1fr); grid-template-rows:none; }
+    .nameplate, .display, .front .ports { grid-column:1; grid-row:auto; }
+    .display { max-width:560px; display:block; }
+    .display .keys { margin-top:18px; }
+    .nameplate > p:last-child { margin-top:16px; padding-top:0; }
+    .js .bays { grid-template-columns:repeat(3, minmax(0, 1fr)); }
+    .notes { grid-template-columns:minmax(0, 1fr); }
+    .note-about { transform:rotate(-.6deg); }
+    .note-exp { transform:rotate(.5deg); }
+  }
+  @media (max-width: 600px) {
+    body { font-size:1rem; }
+    .rack { padding-left:8px; padding-right:8px; }
+    .faceplate { padding:22px 26px 26px; }
+    .lcd { font-size:1.02rem; min-height:0; padding:14px; }
+    .miho-log { height:12.5em; }
+    .ports { gap:10px 12px; letter-spacing:.03em; font-size:.95rem; }
+    .lcd-body { grid-template-columns:60px minmax(0, 1fr); gap:10px; }
+    .sprite { width:60px; height:60px; }
+    .miho-form { grid-template-columns:minmax(0, 1fr) auto auto; }
+    .miho-input { grid-column:1 / -1; }
+    .miho-send { grid-column:2; }
+    .miho-reset { grid-column:3; }
+    .key { padding:14px 10px 13px; gap:8px; letter-spacing:.07em; font-size:1rem; }
+    .bays, .js .bays { grid-template-columns:minmax(0, 1fr); padding:8px; gap:8px; }
+    .js .bays > li { display:block; }
+    .caddy { min-height:0; grid-template-columns:24px minmax(0, 1fr); grid-template-rows:auto auto; column-gap:12px; row-gap:4px; align-items:center; padding:12px 40px 12px 12px; }
+    .caddy .grip { grid-column:1; grid-row:1 / span 2; width:24px; height:40px; background:repeating-linear-gradient(0deg, var(--caddy-shade) 0 4px, transparent 4px 9px); box-shadow:none; }
+    .caddy .title { grid-column:2; grid-row:1; padding:0; font-size:1.05rem; }
+    .caddy .state { grid-column:2; grid-row:2; font-size:.72rem; line-height:1.3; }
+    .led { top:50%; margin-top:-5.5px; }
+    .js .caddy[aria-expanded="true"] { background:var(--caddy-out); color:var(--ink); box-shadow:none; border-radius:4px 4px 0 0; }
+    .js .caddy[aria-expanded="true"] .grip, .js .caddy[aria-expanded="true"] .state { visibility:visible; }
+    .js .readout { padding:16px 18px 20px; }
+    .js .readout::before, .js .readout::after { display:none; }
+    .js .readout { margin:0 0 6px; border-radius:0 0 4px 4px; }
+    .readout { grid-template-columns:minmax(0, 1fr); }
+    .readout h3 { display:none; }
+    .bays-head p { display:none; }
+    .js .bays > li.tray-empty { display:none; }
+    .caddy:not([aria-expanded="true"]):hover { transform:none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition:none !important; animation:none !important; }
+  }
+</style>
+</head>
+<body>
+<main class="rack">
+  <div class="faceplate">
+
+    <div class="front">
+      <header class="nameplate">
+        <h1 style="font-family: 'Limelight', sans-serif;">Parry Chan</h1>
+        <p class="role">Chan Pak San · Linux&nbsp;system&nbsp;administrator · ICT tutor · maker · <span class="nowrap">Hong Kong</span></p>
+        <p style="font-family: 'Cinzel', serif;">
+          "Do not go gentle into that good night, <br>
+          Old age should burn and rave at close of day; <br>
+          Rage, rage against the dying of the light." <br>
+          - Dylan Thomas
+        </p>
+      </header>
+
+      <section class="display" aria-label="Miho, a chat demo running on my home server">
+        <div class="lcd-frame">
+          <div class="lcd">
+            <div class="status"><span>NISHIZUMI MIHO <span class="jp" lang="ja">西住みほ</span></span><span id="miho-state" aria-live="polite">CHECKING</span></div>
+            <div class="lcd-body">
+              <div class="sprite" aria-hidden="true"><img src="miho/avatar.png" alt="" width="96" height="96"></div>
+              <div class="chat" id="miho-lcd" aria-label="Chat with Miho">
+                <noscript><p>Panzer vor! Um… hi, I'm Miho. Want to talk about tanks? (Turn on JavaScript to chat.)</p></noscript>
+              </div>
+            </div>
+            <div class="hint">A tiny 2B LLM living on my home server. She takes a few seconds to think, and she's sometimes confidently wrong, just like me.</div>
+          </div>
+          <div class="bezel-model" aria-hidden="true">Panzer Comms Mk.&nbsp;6767</div>
+        </div>
+        <div class="keys">
+          <button class="key" type="button" id="talk"><span class="pip" aria-hidden="true"></span>Talk to Miho</button>
+          <a class="key secondary" href="mailto:parrychan1219@gmail.com">Email Parry</a>
+        </div>
+      </section>
+      <nav class="ports" aria-label="Contact and sections">
+        <a href="mailto:parrychan1219@gmail.com">parrychan1219@gmail.com</a>
+        <a href="https://github.com/Parrychan1219">GitHub</a>
+        <a href="https://www.instagram.com/parrychan1219/">Instagram</a>
+        <a href="#projects">Projects</a>
+        <a href="#about">About</a>
+        <a href="#experience">Experience</a>
+      </nav>
+    </div>
+
+
+    <div class="notes">
+      <section class="note-card note-about" aria-labelledby="about">
+      <h2 id="about">About</h2>
+        <p>Ciallo (∠·ω )⌒★ I'm Parry. I run a Linux server at home that never sleeps, which is more than I can say for myself. It handles websites, file storage, backups, DNS, a VPN and monitoring, for me and for some other people too. I've also been tutoring since 2022, P2 all the way up to S6. Away from the keyboard I'm into microcontrollers, cars and planes, and I'm looking for a full-time job in IT or IT education, so if you're hiring, the email button is right up there.</p>
+      </section>
+      <section class="note-card note-exp" aria-labelledby="experience">
+      <h2 id="experience">Experience</h2>
+        <ul class="log">
+          <li><span class="what">Private Tutor (P2-S6)</span><span class="when">2022 - present</span></li>
+          <li><span class="what">The Hong Kong Jockey Club – Part-time Branch Service Associate</span><span class="when">2026</span></li>
+          <li><span class="what">Scout Leader</span><span class="when">2025 - 2026</span></li>
+          <li><span class="what">Café Zense – Barista & Shopkeeper</span><span class="when">2025</span></li>
+          <li><span class="what">BSc (Hons) Computer Science – The Hong Kong Polytechnic University</span><span class="when">2024 - present</span></li>
+        </ul>
+        <p class="note">Want the boring version? Full CV on request.</p>
+      </section>
+    </div>
+
+    <div class="vents" aria-hidden="true"></div>
+
+    <div class="bays-head" id="projects">
+      <h2>Projects</h2>
+      <p>Pull a drive to read it</p>
+    </div>
+    <ul class="bays">
+      <li>
+        <button class="caddy" type="button" aria-expanded="false" aria-controls="bay-1">
+          <span class="title">Home server infrastructure</span>
+          <span class="grip" aria-hidden="true"></span>
+          <span class="state">Running while skyrocketing my electricity bill</span>
+          <span class="led" aria-hidden="true"></span>
+        </button>
+        <div class="readout" id="bay-1">
+          <h3>Home server infrastructure</h3>
+          <p>The box everything on this page runs on. It's Ubuntu Server on two mirrored drives (RAID&nbsp;1), so one can die without me losing everything, with 24 Docker containers doing media, cloud storage, video calls, a learning platform and whatever I felt like hosting that week. Nginx juggles 20+ HTTPS sites and shares port 443 with a VPN. Sounds illegal, but it's just SNI routing.</p>
+          <div class="meta"><div class="stamps"><span>Linux</span><span>Docker</span><span>Nginx</span><span>TLS</span><span>RAID</span></div></div>
+        </div>
+      </li>
+      <li>
+        <button class="caddy" type="button" aria-expanded="false" aria-controls="bay-2">
+          <span class="title">Backups, monitoring & failover</span>
+          <span class="grip" aria-hidden="true"></span>
+          <span class="state">Running so that I don't lose my precious data</span>
+          <span class="led" aria-hidden="true"></span>
+        </button>
+        <div class="readout" id="bay-2">
+          <h3>Backups, monitoring & failover</h3>
+          <p>The server takes a snapshot of itself every hour. I also wrote down how to restore from one, because future me won't remember. A Python script keeps an eye on it and messages me on Telegram when something breaks - sometimes at hours I'd rather not be messaged. If the whole server goes down, a Cloudflare Worker and a second machine put up a temporarily down page, so nobody has to see a timeout.</p>
+          <div class="meta"><div class="stamps"><span>Python</span><span>systemd</span><span>Cloudflare</span></div></div>
+        </div>
+      </li>
+      <li>
+        <button class="caddy" type="button" aria-expanded="false" aria-controls="bay-3">
+          <span class="title"><span class="nowrap">ESP32-S3</span> server watchdog</span>
+          <span class="grip" aria-hidden="true"></span>
+          <span class="state">Running so that I know the box broke at 2 am</span>
+          <span class="led" aria-hidden="true"></span>
+        </button>
+        <div class="readout" id="bay-3">
+          <h3>ESP32-S3 server watchdog</h3>
+          <p>A tiny ESP32-S3 board that pokes the server from outside once a minute. Its LED shows how things are going, it has its own Telegram bot, and I update it over the air without unplugging anything. Waking up to it flashing orange is a whole experience.</p>
+          <div class="meta">
+            <div class="stamps"><span>C++</span><span>ESP32</span><span>PlatformIO</span></div>
+            <a href="https://github.com/Parrychan1219/ESP32S3-Server-Health-Monitor">Source on GitHub</a>
+          </div>
+        </div>
+      </li>
+      <li>
+        <button class="caddy" type="button" aria-expanded="false" aria-controls="bay-4">
+          <span class="title">Security incident & rebuild</span>
+          <span class="grip" aria-hidden="true"></span>
+          <span class="state">Rebuilt, and won't happen again cuz it's too stupid</span>
+          <span class="led warn" aria-hidden="true"></span>
+        </button>
+        <div class="readout warn" id="bay-4">
+          <h3>Security incident & rebuild</h3>
+          <p>My first server got hacked by someone stupid, but I'm more stupid than them, because I put a web app online with no login (which logged everyone in as admin) and they just walked in and started mining crypto on it. Subsequently, I went through the disk image to work out what happened. I also rebuilt everything, so every service needs a login and nothing runs with more access than it needs, and I added monitoring so I don't find out that way again.</p>
+          <div class="meta"><div class="stamps"><span>Forensics</span><span>Hardening</span></div></div>
+        </div>
+      </li>
+      <li>
+        <button class="caddy" type="button" aria-expanded="false" aria-controls="bay-5">
+          <span class="title">Moodle for a Scout troop</span>
+          <span class="grip" aria-hidden="true"></span>
+          <span class="state">Running and falling in with the troops together</span>
+          <span class="led" aria-hidden="true"></span>
+        </button>
+        <div class="readout" id="bay-5">
+          <h3>Moodle for a Scout troop</h3>
+          <p>I installed and look after a Moodle site for a Scout leader. It updates itself and keeps backups, so if an update goes sideways I can roll it back before anyone notices.</p>
+          <div class="meta"><div class="stamps"><span>Moodle</span><span>PHP</span><span>MariaDB</span></div></div>
+        </div>
+      </li>
+      <li>
+        <button class="caddy" type="button" aria-expanded="false" aria-controls="bay-6">
+          <span class="title">Bots & tools</span>
+          <span class="grip" aria-hidden="true"></span>
+          <span class="state">Running and serving me well day to day, 24/7</span>
+          <span class="led" aria-hidden="true"></span>
+        </button>
+        <div class="readout" id="bay-6">
+          <h3>Bots & tools</h3>
+          <p>The side quests: a Telegram bot for MTR next-train times, another one for downloads, a Carousell price watcher that once spammed me so hard I had to tune it down, and a relay that plays AirPlay&nbsp;2 audio on my PC. Their code lives in a folder called "Dumbass Programs", which tells you how seriously I take them.</p>
+          <div class="meta"><div class="stamps"><span>Python</span><span>Telegram</span><span>Snapcast</span></div></div>
+        </div>
+      </li>
+      <li class="tray-empty" aria-hidden="true">
+        <span class="tray-arrow"></span>
+        <span>Nothing pulled out yet. Click a drive to slide it out.</span>
+      </li>
+    </ul>
+  </div>
+
+</main>
+<script src="miho/miho.js" data-api="https://api.dllmch.org/llm/miho" data-mount="miho-lcd" defer></script>
+<script>
+(function () {
+  "use strict";
+  document.documentElement.classList.add("js");
+  var caddies = Array.prototype.slice.call(document.querySelectorAll(".caddy"));
+  var bays = document.querySelector(".bays");
+  var phone = window.matchMedia("(max-width: 600px)");
+  function show(target) {
+    caddies.forEach(function (c, i) {
+      var on = c === target;
+      c.setAttribute("aria-expanded", on ? "true" : "false");
+      c.style.setProperty("--i", i);
+      document.getElementById(c.getAttribute("aria-controls")).hidden = !on;
+    });
+    bays.classList.toggle("has-open", !!target);
+  }
+  caddies.forEach(function (c) {
+    // clicking the open drive again slides it back in
+    c.addEventListener("click", function () { show(c.getAttribute("aria-expanded") === "true" ? null : c); });
+  });
+  // phones open the first drive; desktop starts with every drive in and a hint in the tray
+  show(phone.matches ? caddies[0] : null);
+  if ("IntersectionObserver" in window && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    var seen = new IntersectionObserver(function (entries) {
+      if (!entries[0].isIntersecting) { return; }
+      seen.disconnect();
+      bays.classList.add("nudge");
+      setTimeout(function () { bays.classList.remove("nudge"); }, 1400);
+    }, { threshold: 0.6 });
+    seen.observe(bays);
+  }
+
+  var talk = document.getElementById("talk");
+  var state = document.getElementById("miho-state");
+  var lcd = document.getElementById("miho-lcd");
+  talk.addEventListener("click", function () {
+    var input = lcd.querySelector(".miho-input");
+    lcd.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    if (input && !input.disabled) { input.focus({ preventScroll: true }); }
+  });
+  lcd.addEventListener("miho:state", function (event) {
+    var d = event.detail || {};
+    if (d.checking) { state.textContent = "CHECKING"; talk.removeAttribute("data-state"); return; }
+    state.textContent = d.available ? "ONLINE" : "OFFLINE";
+    talk.setAttribute("data-state", d.available ? "online" : "offline");
+  });
+})();
+</script>
+</body>
+</html>
