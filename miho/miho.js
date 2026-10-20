@@ -32,6 +32,15 @@
         send: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12h15M13 5l7 7-7 7"/></svg>'
     };
 
+    function limitedText(seconds) {
+        var s = Number(seconds);
+        if (!(s > 0)) { return TEXT.limited; }
+        if (s <= 10) { return "Um, not so fast! Give me a few seconds."; }
+        if (s < 90) { return "Um, that's a lot of questions! Let me catch my breath, try again in about a minute."; }
+        return "Um, that's a lot of questions! Let me catch my breath, try again in about " +
+            Math.round(s / 60) + " minutes.";
+    }
+
     function el(tag, cls, text) {
         var node = document.createElement(tag);
         if (cls) { node.className = cls; }
@@ -242,7 +251,14 @@
                 cache: "no-store"
             }).then(function (res) {
                 if (!res.ok) {
-                    if (res.status === 429) { throw new Error(TEXT.limited); }
+                    if (res.status === 429) {
+                        // The body says how long to wait; turn it into words.
+                        return res.json().catch(function () { return {}; }).then(function (body) {
+                            var err = new Error(limitedText(body && body.retry_after));
+                            err.own = true;
+                            throw err;
+                        });
+                    }
                     if (res.status === 503) { throw new Error(TEXT.busy); }
                     if (res.status === 413) { throw new Error(TEXT.tooLong); }
                     throw new Error(TEXT.failed);
@@ -287,7 +303,7 @@
                 // Only the widget's own wording reaches the visitor, never the
                 // browser's ("Failed to fetch", "Load failed").
                 var own = [TEXT.limited, TEXT.busy, TEXT.tooLong];
-                finish(err && own.indexOf(err.message) >= 0 ? err.message : TEXT.failed);
+                finish(err && (err.own || own.indexOf(err.message) >= 0) ? err.message : TEXT.failed);
             });
         }
 
