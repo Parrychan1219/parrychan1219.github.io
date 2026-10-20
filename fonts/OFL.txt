@@ -3,3 +3,5 @@ All fonts in this folder are licensed under the SIL Open Font License 1.1: https
 - Doto (c) The Doto Project Authors (weights 600 and 900)
 - Cinzel, Limelight, Nabla: see OFL-Cinzel.txt, OFL-Limelight.txt, OFL-Nabla.txt
 Converted to WOFF2 and subset to Latin characters on 2026-10-20.
+- DotGothic16: see OFL-DotGothic16.txt. Self-hosted in Google's per-script slices. The Cyrillic slice
+  (dotgothic16/dg-121.woff2) is modified: letters narrowed from full width to their own width plus one pixel.

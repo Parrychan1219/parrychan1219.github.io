@@ -41,6 +41,22 @@
             Math.round(s / 60) + " minutes.";
     }
 
+    // Runs of non-Latin script (CJK, kana, Cyrillic, ...) get their own span so the
+    // page can give them a font and weight that match the Latin text around them.
+    var SCRIPT_RUN = /[^\u0000-\u024F\u1E00-\u1EFF\u2000-\u206F\u20A0-\u20CF\u2100-\u214F\u2190-\u21FF]+/g;
+    function paint(node, text) {
+        node.textContent = "";
+        var last = 0;
+        text.replace(SCRIPT_RUN, function (run, at) {
+            if (at > last) { node.appendChild(document.createTextNode(text.slice(last, at))); }
+            node.appendChild(el("span", "miho-script", run));
+            last = at + run.length;
+            return run;
+        });
+        if (last < text.length) { node.appendChild(document.createTextNode(text.slice(last))); }
+        return node;
+    }
+
     function el(tag, cls, text) {
         var node = document.createElement(tag);
         if (cls) { node.className = cls; }
@@ -146,13 +162,13 @@
 
         function scroll() { log.scrollTop = log.scrollHeight; }
         function bubble(role, text) {
-            var node = el("div", "miho-message " + (role === "user" ? "miho-user" : "miho-bot"), text);
+            var node = paint(el("div", "miho-message " + (role === "user" ? "miho-user" : "miho-bot")), text);
             log.appendChild(node);
             scroll();
             return node;
         }
         function note(text) {
-            var node = el("div", "miho-note", text);
+            var node = paint(el("div", "miho-note"), text);
             log.appendChild(node);
             scroll();
             return node;
@@ -278,7 +294,7 @@
                         }
                         answer = Object.prototype.hasOwnProperty.call(data, "replace")
                             ? data.replace : answer + data.t;
-                        reply.textContent = answer;
+                        paint(reply, answer);
                         scroll();
                     }
                     if (data.done && typeof data.sig === "string") { sig = data.sig; }

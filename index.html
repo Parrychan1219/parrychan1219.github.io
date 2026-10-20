@@ -8,6 +8,7 @@
 <meta name="theme-color" content="#2f3a44">
 <link rel="preload" href="fonts/barlow-condensed-700.woff2" as="font" type="font/woff2" crossorigin>
 <style>
+  @import url(fonts/dotgothic16.css);
   @font-face { font-family:"Barlow Condensed"; font-weight:500; font-display:swap; src:url(fonts/barlow-condensed-500.woff2) format("woff2"); }
   @font-face { font-family:"Barlow Condensed"; font-weight:700; font-display:swap; src:url(fonts/barlow-condensed-700.woff2) format("woff2"); }
   @font-face { font-family:"Barlow"; font-weight:400; font-display:swap; src:url(fonts/barlow-400.woff2) format("woff2"); }
@@ -16,7 +17,6 @@
   @font-face { font-family:"Doto"; font-weight:900; font-display:swap; src:url(fonts/doto-900.woff2) format("woff2"); }
   @font-face { font-family:"Limelight"; font-weight:400; font-display:swap; src:url(fonts/limelight-400.woff2) format("woff2"); }
   @font-face { font-family:"Cinzel"; font-weight:400 900; font-display:swap; src:url(fonts/cinzel-variable.woff2) format("woff2"); }
-  @font-face { font-family:"DotGothic16"; font-weight:400; font-display:swap; src:url(fonts/dotgothic16-miho.woff2) format("woff2"); }
   @font-face { font-family:"Nabla"; font-weight:400; font-display:swap; src:url(fonts/nabla-variable.woff2) format("woff2"); }
 
   :root {
@@ -48,7 +48,7 @@
     --note-ink-dim: #4f4c38;
     --silkscreen: "Barlow Condensed", "Arial Narrow", sans-serif;
     --text: "Barlow", "Helvetica Neue", Arial, sans-serif;
-    --dots: "Doto", ui-monospace, monospace;
+    --dots: "Doto", "DotGothic16", ui-monospace, monospace;
   }
 
   * { box-sizing:border-box; }
@@ -101,9 +101,10 @@
   .lcd {
     background:var(--lcd); color:var(--lcd-ink); border-radius:3px; min-height:11.5em;
     padding:16px 18px; font:600 1.15rem/1.45 var(--dots); letter-spacing:.02em;
+    font-synthesis:none; /* characters outside Doto fall back to DotGothic16, which has no bold */
     box-shadow:inset 0 3px 12px #6f7d2a59;
   }
-  .lcd .status .jp { font-family:"DotGothic16", var(--dots); letter-spacing:.06em; color:#2c360dcc; }
+  .lcd .status .jp { font-family:"DotGothic16", var(--dots); font-weight:400; font-synthesis:none; letter-spacing:.06em; }
   .lcd .status #miho-state { margin-left:auto; }
   .lcd .status { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0 12px; border-bottom:2px dotted #2c360d55; padding-bottom:6px; margin-bottom:10px; }
   /* her face printed in the display's own ink, dot-matrix style */
@@ -117,6 +118,8 @@
   .miho-embedded { display:flex; flex-direction:column; gap:10px; }
   .miho-log { height:8.8em; overflow-y:auto; display:flex; flex-direction:column; gap:.55em; padding-right:6px; scrollbar-width:thin; scrollbar-color:var(--lcd-ink) transparent; overscroll-behavior:contain; }
   .miho-greeting, .miho-message, .miho-note, .miho-typing { overflow-wrap:anywhere; white-space:pre-wrap; }
+  /* DotGothic16 has one weight; asking for 400 stops the browser faking a bold from the LCD's 600 */
+  .miho-script { font-family:"DotGothic16", var(--dots); font-weight:400; font-synthesis:none; }
   .miho-user { align-self:flex-end; max-width:88%; padding:0 .35em; background:var(--lcd-ink); color:var(--lcd); }
   .miho-note, .miho-typing { font-size:.85em; }
   .miho-offline { font-weight:900; }
