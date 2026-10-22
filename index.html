@@ -125,6 +125,7 @@
   .miho-script { font-family:"DotGothic16", var(--dots); font-weight:400; font-synthesis:none; }
   .miho-user { align-self:flex-end; max-width:88%; padding:0 .35em; background:var(--lcd-ink); color:var(--lcd); }
   .miho-note, .miho-typing { font-size:.85em; }
+  .miho-check { align-self:stretch; min-height:0; }
   .miho-offline { font-weight:900; }
   .miho-cursor::after, .lcd-caret { content:""; display:inline-block; width:.55em; height:1em; margin-left:2px; vertical-align:-.12em; background:var(--lcd-ink); animation:blink 1.1s steps(1) infinite; }
   @keyframes blink { 50% { opacity:0; } }
@@ -516,7 +517,7 @@
   </button>
 
 </main>
-<script src="miho/miho.js" data-api="https://api.dllmch.org/llm/miho" data-mount="miho-lcd" defer></script>
+<script src="miho/miho.js" data-api="https://api.dllmch.org/llm/miho" data-captcha="https://api.dllmch.org/captcha" data-sitekey="0x4AAAAAAFhTQBJCZgaYSD1T" data-mount="miho-lcd" defer></script>
 <script>
 (function () {
   "use strict";

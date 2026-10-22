@@ -5,6 +5,13 @@
     var API = (script && script.getAttribute("data-api") || "").replace(/\/$/, "");
     // data-mount="<id>": build the chat inside that element instead of a floating launcher.
     var MOUNT = script && script.getAttribute("data-mount");
+    // Human check before chatting: Turnstile, or self-hosted ALTCHA when Turnstile can't load.
+    // data-captcha = the captcha-gate base URL, data-sitekey = the Turnstile sitekey.
+    var CAPTCHA = (script && script.getAttribute("data-captcha") || "").replace(/\/$/, "");
+    var SITEKEY = script && script.getAttribute("data-sitekey");
+    var ALTCHA_JS = (script && script.src || "").replace(/[^\/]*$/, "") + "altcha.min.js";
+    var TURNSTILE_JS = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    var PASS_STORE = "miho-pass-v1";
     var STORE = "miho-conversation-v1";
     var MAX_CHARS = 500;
     var KEEP = 8;
@@ -22,7 +29,9 @@
         limited: "Um, that's a lot of questions! Let me catch my breath for a bit.",
         busy: "Everyone's talking to me at once, try again in a moment!",
         failed: "Sorry, something went wrong. Please try again.",
-        tooLong: "That message is too long (500 characters max)."
+        tooLong: "That message is too long (500 characters max).",
+        checking: "Just a quick check that you're human…",
+        captcha: "Um, I couldn't check that you're human. Please reload the page and try again!"
     };
 
     var ICONS = {
@@ -78,6 +87,92 @@
     function save(history) {
         try { window.sessionStorage.setItem(STORE, JSON.stringify(history.slice(-40))); }
         catch (err) { /* Private browsing can disable storage. */ }
+    }
+
+    function loadScript(src) {
+        return new Promise(function (resolve, reject) {
+            var s = document.createElement("script");
+            s.src = src;
+            s.async = true;
+            s.onload = resolve;
+            s.onerror = reject;
+            document.head.appendChild(s);
+        });
+    }
+
+    function storedPass() {
+        try {
+            var p = JSON.parse(window.sessionStorage.getItem(PASS_STORE) || "null");
+            if (p && typeof p.pass === "string" && p.expires * 1000 - Date.now() > 60000) { return p.pass; }
+        } catch (err) { /* ignore */ }
+        return null;
+    }
+
+    function dropPass() {
+        try { window.sessionStorage.removeItem(PASS_STORE); } catch (err) { /* ignore */ }
+    }
+
+    // Trade a Turnstile token or an ALTCHA payload for a 30-minute pass.
+    function redeem(field, value) {
+        var body = {};
+        body[field] = value;
+        return fetch(CAPTCHA + "/pass", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+            credentials: "omit",
+            cache: "no-store"
+        }).then(function (res) {
+            if (!res.ok) { throw new Error("pass"); }
+            return res.json();
+        }).then(function (data) {
+            try { window.sessionStorage.setItem(PASS_STORE, JSON.stringify(data)); } catch (err) { /* ignore */ }
+            return data.pass;
+        });
+    }
+
+    // Renders the check into `box`; resolves with a pass. Turnstile first, ALTCHA after an
+    // error or when Turnstile has not answered in 10 s.
+    function humanCheck(box) {
+        return new Promise(function (resolve, reject) {
+            var fellBack = false;
+            var timer = setTimeout(altcha, 10000);
+            function altcha() {
+                if (fellBack) { return; }
+                fellBack = true;
+                clearTimeout(timer);
+                box.textContent = "";
+                loadScript(ALTCHA_JS).then(function () {
+                    var w = document.createElement("altcha-widget");
+                    w.setAttribute("challenge", CAPTCHA + "/altcha/challenge");
+                    w.setAttribute("auto", "onload");
+                    w.setAttribute("configuration", JSON.stringify({ hideFooter: true, hideLogo: true }));
+                    w.addEventListener("verified", function (event) {
+                        redeem("altcha", event.detail.payload).then(resolve, reject);
+                    });
+                    w.addEventListener("statechange", function (event) {
+                        if (event.detail && event.detail.state === "error") { reject(new Error("altcha")); }
+                    });
+                    box.appendChild(w);
+                }, reject);
+            }
+            (window.turnstile ? Promise.resolve() : loadScript(TURNSTILE_JS)).then(function () {
+                if (fellBack) { return; }
+                window.turnstile.render(box, {
+                    sitekey: SITEKEY,
+                    size: "flexible",
+                    appearance: "interaction-only",
+                    "before-interactive-callback": function () { clearTimeout(timer); },
+                    callback: function (token) {
+                        if (fellBack) { return; }
+                        clearTimeout(timer);
+                        redeem("turnstile", token).then(resolve, function () { altcha(); });
+                    },
+                    "error-callback": function () { altcha(); return true; },
+                    "unsupported-callback": altcha
+                });
+            }).catch(altcha);
+        });
     }
 
     function build() {
@@ -243,6 +338,34 @@
             var answer = "";
             var sig = null;
 
+            function getPass() {
+                var p = storedPass();
+                if (p || !CAPTCHA) { return Promise.resolve(p); }
+                var box = el("div", "miho-check");
+                var label = note(TEXT.checking);
+                log.insertBefore(label, typing);
+                log.insertBefore(box, typing);
+                scroll();
+                function tidy() { label.remove(); box.remove(); }
+                return humanCheck(box).then(function (pass) { tidy(); return pass; }, function () {
+                    tidy();
+                    var err = new Error(TEXT.captcha);
+                    err.own = true;
+                    throw err;
+                });
+            }
+            function post(pass) {
+                var headers = { "Content-Type": "application/json" };
+                if (pass) { headers["X-Captcha-Pass"] = pass; }
+                return fetch(API + "/chat", {
+                    method: "POST",
+                    headers: headers,
+                    body: JSON.stringify({ lang: "en", messages: history.slice(-KEEP) }),
+                    credentials: "omit",
+                    cache: "no-store"
+                });
+            }
+
             function finish(error) {
                 if (typing.parentNode) { typing.remove(); }
                 if (reply) { reply.classList.remove("miho-cursor"); }
@@ -259,12 +382,13 @@
                 resize();
             }
 
-            fetch(API + "/chat", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ lang: "en", messages: history.slice(-KEEP) }),
-                credentials: "omit",
-                cache: "no-store"
+            getPass().then(post).then(function (res) {
+                // The pass ran out or the server forgot it: check once more, then retry.
+                if (res.status === 401) {
+                    dropPass();
+                    return getPass().then(post);
+                }
+                return res;
             }).then(function (res) {
                 if (!res.ok) {
                     if (res.status === 429) {
