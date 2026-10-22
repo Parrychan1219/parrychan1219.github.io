@@ -31,6 +31,7 @@
         failed: "Sorry, something went wrong. Please try again.",
         tooLong: "That message is too long (500 characters max).",
         checking: "Just a quick check that you're human…",
+        tick: "Please tick the box below so I know you're human!",
         captcha: "Um, I couldn't check that you're human. Please reload the page and try again!"
     };
 
@@ -132,8 +133,9 @@
     }
 
     // Renders the check into `box`; resolves with a pass. Turnstile first, ALTCHA after an
-    // error or when Turnstile has not answered in 10 s.
-    function humanCheck(box) {
+    // error or when Turnstile has not answered in 10 s. onInteractive runs when Turnstile
+    // shows a checkbox that the visitor must click.
+    function humanCheck(box, onInteractive) {
         return new Promise(function (resolve, reject) {
             var fellBack = false;
             var timer = setTimeout(altcha, 10000);
@@ -162,7 +164,10 @@
                     sitekey: SITEKEY,
                     size: "flexible",
                     appearance: "interaction-only",
-                    "before-interactive-callback": function () { clearTimeout(timer); },
+                    "before-interactive-callback": function () {
+                        clearTimeout(timer);
+                        if (onInteractive) { onInteractive(); }
+                    },
                     callback: function (token) {
                         if (fellBack) { return; }
                         clearTimeout(timer);
@@ -346,8 +351,24 @@
                 log.insertBefore(label, typing);
                 log.insertBefore(box, typing);
                 scroll();
-                function tidy() { label.remove(); box.remove(); }
-                return humanCheck(box).then(function (pass) { tidy(); return pass; }, function () {
+                function tidy() { clearTimeout(limit); label.remove(); box.remove(); }
+                // Give up after 60 s, counted again from the moment a checkbox appears,
+                // so the chat never waits for ever on a check that stalled.
+                var limit, rearm;
+                var expired = new Promise(function (resolve, reject) {
+                    rearm = function () {
+                        clearTimeout(limit);
+                        limit = setTimeout(function () { reject(new Error("timeout")); }, 60000);
+                    };
+                    rearm();
+                });
+                var check = humanCheck(box, function () {
+                    paint(label, TEXT.tick);
+                    rearm();
+                    // The checkbox needs a moment to grow to its full height.
+                    setTimeout(function () { box.scrollIntoView({ block: "nearest" }); }, 300);
+                });
+                return Promise.race([check, expired]).then(function (pass) { tidy(); return pass; }, function () {
                     tidy();
                     var err = new Error(TEXT.captcha);
                     err.own = true;
