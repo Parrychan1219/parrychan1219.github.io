@@ -121,7 +121,7 @@
     border-bottom-right-radius: 5px;
     background: var(--miho-user);
 }
-.miho-check { align-self: stretch; }
+.miho-check { align-self: stretch; flex-shrink: 0; }
 .miho-note { align-self: center; max-width: 100%; color: var(--miho-muted); text-align: center; font-size: .86rem; }
 .miho-typing { color: var(--miho-muted); font-size: .86rem; }
 .miho-cursor::after { content: "▍"; margin-left: 2px; animation: miho-blink 1s steps(2) infinite; }
