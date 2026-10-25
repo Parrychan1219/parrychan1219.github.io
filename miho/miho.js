@@ -32,8 +32,13 @@
         tooLong: "That message is too long (500 characters max).",
         checking: "Just a quick check that you're human…",
         tick: "Please tick the box below so I know you're human!",
-        captcha: "Um, I couldn't check that you're human. Please reload the page and try again!"
+        captcha: "Um, I couldn't check that you're human. Please reload the page and try again!",
+        // /health "busy": every model slot taken, or the server busy with its other jobs
+        busySlots: "Um, lots of people are talking to me right now, so my replies might be a bit slow!",
+        busyLoad: "Um, I'm also dealing with some other stuff right now, so my replies might be slow!"
     };
+    var BUSY_POLL = 30000;      // re-ask /health this often while the tab is visible
+    var SLOW_START = 4000;      // no first word after this long: ask /health why
 
     var ICONS = {
         close: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
@@ -185,6 +190,7 @@
         var busy = false;
         var available = false;
         var healthCheck = 0;
+        var busyReason = null;
         var mount = MOUNT ? document.getElementById(MOUNT) : null;
         var embedded = !!mount;
 
@@ -236,11 +242,23 @@
         input.maxLength = MAX_CHARS;
         input.placeholder = TEXT.placeholder;
         input.setAttribute("aria-label", TEXT.placeholder);
+        input.name = "message";
+        input.setAttribute("autocomplete", "off");
+        input.setAttribute("enterkeyhint", "send");
         input.disabled = true;
         var send = el("button", "miho-send", TEXT.send);
         send.type = "submit";
         send.disabled = true;
         form.appendChild(input);
+        // Embedded: the placeholder is drawn here instead of by the textarea, so the
+        // display can put its block cursor after it while Miho is ready for a message.
+        var ghost = null;
+        if (MOUNT) {
+            ghost = el("span", "miho-ghost", TEXT.placeholder);
+            ghost.setAttribute("aria-hidden", "true");
+            input.placeholder = "";
+            form.appendChild(ghost);
+        }
         form.appendChild(send);
         if (embedded) {
             reset.textContent = "New";
@@ -282,9 +300,32 @@
             input.style.height = "auto";
             input.style.height = Math.min(input.scrollHeight, 110) + "px";
             send.disabled = !available || busy || !input.value.trim();
+            if (ghost) {
+                ghost.hidden = input.value !== "";
+                ghost.classList.toggle("miho-ghost-live",
+                    available && !busy && !input.disabled && document.activeElement !== input);
+            }
         }
         function announce(checking) {
-            root.dispatchEvent(new CustomEvent("miho:state", { bubbles: true, detail: { available: available, checking: !!checking } }));
+            var busyText = busyReason === "slots" ? TEXT.busySlots : busyReason === "load" ? TEXT.busyLoad : "";
+            root.dispatchEvent(new CustomEvent("miho:state", { bubbles: true, detail: {
+                available: available, checking: !!checking, busy: busyReason, busyText: busyText } }));
+        }
+        function readBusy(res) {
+            return res.json().catch(function () { return {}; }).then(function (body) {
+                var b = body && body.busy;
+                busyReason = b === "slots" || b === "load" ? b : null;
+            });
+        }
+        // A quiet /health call for the busy line only: no CHECKING flash, and a failure
+        // leaves things as they are (the next full check decides online/offline).
+        function pollBusy() {
+            if (!available) { return; }
+            fetch(API + "/health", { method: "GET", credentials: "omit", cache: "no-store" }).then(function (res) {
+                if (!res.ok || !available) { return; }
+                var was = busyReason;
+                return readBusy(res).then(function () { if (busyReason !== was) { announce(); } });
+            }).catch(function () { /* keep the last answer */ });
         }
         function checkHealth() {
             var requestId = ++healthCheck;
@@ -298,6 +339,8 @@
                 cache: "no-store"
             }).then(function (res) {
                 if (!res.ok) { throw new Error("health"); }
+                return readBusy(res);
+            }).then(function () {
                 if (requestId !== healthCheck) { return; }
                 available = true;
                 input.disabled = false;
@@ -307,6 +350,7 @@
             }).catch(function () {
                 if (requestId !== healthCheck) { return; }
                 available = false;
+                busyReason = null;
                 input.disabled = true;
                 resize();
                 if (!offlineNote) { offlineNote = note(TEXT.offline); offlineNote.classList.add("miho-offline"); }
@@ -339,6 +383,10 @@
             var typing = el("div", "miho-typing", "Miho is thinking…");
             log.appendChild(typing);
             scroll();
+            pollBusy();
+            // Slow to start (a slot to wait for, or a busy box): ask the server why, so
+            // the line can appear even between two regular polls.
+            var slowStart = setTimeout(pollBusy, SLOW_START);
             var reply = null;
             var answer = "";
             var sig = null;
@@ -388,6 +436,7 @@
             }
 
             function finish(error) {
+                clearTimeout(slowStart);
                 if (typing.parentNode) { typing.remove(); }
                 if (reply) { reply.classList.remove("miho-cursor"); }
                 if (answer) {
@@ -433,6 +482,7 @@
                     if (Object.prototype.hasOwnProperty.call(data, "t") ||
                         Object.prototype.hasOwnProperty.call(data, "replace")) {
                         if (!reply) {
+                            clearTimeout(slowStart);
                             typing.remove();
                             reply = bubble("assistant", "");
                             reply.classList.add("miho-cursor");
@@ -486,6 +536,8 @@
             ask(input.value);
         });
         input.addEventListener("input", resize);
+        input.addEventListener("focus", resize);
+        input.addEventListener("blur", resize);
         input.addEventListener("keydown", function (event) {
             if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
                 event.preventDefault();
@@ -495,6 +547,12 @@
 
         render();
         if (embedded) { checkHealth(); }
+        setInterval(function () {
+            if (document.visibilityState === "visible" && (embedded || !panel.hidden)) { pollBusy(); }
+        }, BUSY_POLL);
+        document.addEventListener("visibilitychange", function () {
+            if (document.visibilityState === "visible" && (embedded || !panel.hidden)) { pollBusy(); }
+        });
     }
 
     if (document.readyState === "loading") {
